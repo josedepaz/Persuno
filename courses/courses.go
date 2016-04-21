@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
-    "database/sql"
 
 	"goji.io"
 	"goji.io/pat"
@@ -21,15 +21,18 @@ type Course struct {
 }
 
 func findAllCourses(ctx context.Context, w http.ResponseWriter, r *http.Request) {
-	db, err := sql.Open("mysql", "root:usac2016@tcp(mysql:3306)/lmsdb")
+	db, err := sql.Open("mysql", "root:usac2016@tcp(192.168.56.101:3306)/lmsdb")
 	if err != nil {
 		panic(err)
 	}
+	defer db.Close()
 
 	rows, err := db.Query("SELECT id, name, description FROM Course")
 	if err != nil {
 		panic(err)
 	}
+	defer rows.Close()
+	
 	var courses []Course
 	for rows.Next() {
 		var id int
@@ -54,5 +57,5 @@ func main() {
 	mux := goji.NewMux()
 	mux.HandleFuncC(pat.Get("/"), findAllCourses)
 
-	http.ListenAndServe("localhost:8001", mux)
+	http.ListenAndServe("localhost:8002", mux)
 }
